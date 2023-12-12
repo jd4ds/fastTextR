@@ -246,16 +246,22 @@ Rcpp::List Rft_word_vectors(SEXP ft, std::vector<std::string> words) {
 
 // [[Rcpp::export]]
 Rcpp::List Rft_sentence_vectors(SEXP ft, std::vector<std::string> sentences) {
-    Rcpp::XPtr<FastText>fast_text(ft);
+    Rcpp::XPtr<FastText> fast_text(ft);
 
     fasttext::Vector vec(fast_text->getDimension());
     Rcpp::List retval(sentences.size());
 
+    // create a std::istringstream object outside the loop
+    std::istringstream iss;
+
     for (int32_t i = 0; i < sentences.size(); i++) {
-        // create a std::istringstream object from sentences[i]
-        std::istringstream iss(sentences[i]);
+        // use the str() function of istringstream to change its content
+        iss.str(sentences[i]);
         fast_text->getSentenceVector(iss, vec);
         retval[i] = std::vector<float>(vec.data(), vec.data() + vec.size());
+        // clear the error flags and reset the read position of istringstream
+        iss.clear();
+        iss.seekg(0);
     }
 
     return retval;
